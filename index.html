@@ -1261,9 +1261,9 @@
             }, 300);
         }
 
+        // Password untuk Pengawas
         function submitPassword() {
             const passwordInput = document.getElementById('dashboard-password-input');
-            // DIUBAH: Mengganti password dari '42bersama' menjadi ' 42bersama ' dengan spasi di awal dan di akhir
             if (passwordInput.value === ' 42bersama ') {
                 hidePasswordModal();
                 initTeacherDashboard();
@@ -1612,7 +1612,11 @@
                 violations = existingRecord.violations || 0;
                 examTimer = existingRecord.remainingTime || 0;
             } else {
-                currentStudentId = 'STD-' + Math.floor(1000 + Math.random() * 9000);
+                // PEMBARUAN PENCEGAHAN BENTROK ID:
+                // Menggunakan ID unik berbasis inisial nama, kelas, dan milidetik waktu saat ini.
+                const nameClean = currentStudentName.replace(/\s+/g, '').substring(0, 3).toUpperCase();
+                const classClean = currentStudentClass.replace(/\s+/g, '').toUpperCase();
+                currentStudentId = `STD-${nameClean}-${classClean}-${Date.now().toString().slice(-4)}`;
                 violations = 0;
                 examTimer = 0;
             }
@@ -1680,8 +1684,11 @@
 
             let durationInSeconds = durationInMinutes * 60;
             const existingRecord = getActiveStudentRecord(currentStudentName, currentStudentClass);
-            if (existingRecord && existingRecord.remainingTime !== undefined && existingRecord.remainingTime !== null) {
-                durationInSeconds = existingRecord.remainingTime; // Ambil sisa waktu terakhir yang ter-freeze
+            
+            // PERBAIKAN LOGIKA SISA WAKTU:
+            // Pastikan jika ada record sisa waktu ter-freeze yang valid (> 0), sisa waktu tersebut yang dilanjutkan.
+            if (existingRecord && existingRecord.remainingTime !== undefined && existingRecord.remainingTime !== null && existingRecord.remainingTime > 0) {
+                durationInSeconds = existingRecord.remainingTime; 
             }
 
             startTimer(durationInSeconds);
@@ -1918,16 +1925,19 @@
             const finalSubject = subject || currentSubjectName || (db[id] ? db[id].subject : "");
             const finalPendingUntil = status === 'Pending' ? (pendingUntil || (db[id] ? db[id].pendingUntil : 0)) : 0;
             
-            // Perbaikan Bug Sisa Waktu: Prioritaskan sisa waktu yang sedang berjalan (examTimer) atau customRemainingTime
+            // PERBAIKAN BUG UTAMA SISA WAKTU HABIS INSTAN:
+            // Pastikan jika statusnya adalah 'Menunggu' atau 'Siap Ujian' dan siswa merupakan login pertama (belum ada data remainingTime sebelumnya atau remainingTime bernilai 0),
+            // kita tidak mengambil nilai remainingTime instan 0 dari sisa database lama yang tidak cocok.
             let finalRemainingTime = null;
-            if (customRemainingTime !== null) {
+            if (customRemainingTime !== null && customRemainingTime > 0) {
                 finalRemainingTime = customRemainingTime;
             } else if (isExamActive && examTimer > 0) {
                 finalRemainingTime = examTimer;
-            } else if (db[id] && db[id].remainingTime !== undefined) {
+            } else if (db[id] && db[id].remainingTime !== undefined && db[id].remainingTime !== null && db[id].remainingTime > 0) {
                 finalRemainingTime = db[id].remainingTime;
             } else {
-                finalRemainingTime = examTimer || null;
+                // Untuk siswa baru, biarkan null agar di-init ulang dari durasi default mapel saat enterExamMode
+                finalRemainingTime = null;
             }
 
             db[id] = {
@@ -2417,7 +2427,7 @@
                 input.value = '';
                 durationInput.value = 90;
                 toggle.checked = false;
-                qrImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
+                qrImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII+";
                 document.getElementById('qr-subject-label').innerText = "Pilih Mapel";
                 
                 const badge = document.getElementById('qr-status-badge');
