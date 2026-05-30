@@ -114,7 +114,7 @@
             <div class="w-16 h-16 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
                 <i class="fas fa-question-circle"></i>
             </div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2" id="custom-alert-title">Konfirmasi</h3>
+            <h3 class="text-xl font-bold text-slate-800 mb-2" id="custom-confirm-title">Konfirmasi</h3>
             <p class="text-slate-600 mb-6 text-sm whitespace-pre-line" id="custom-confirm-message">Apakah Anda yakin?</p>
             <div class="flex gap-3 justify-center">
                 <button id="custom-confirm-btn-no" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-3 rounded-xl transition">Tidak</button>
@@ -241,7 +241,7 @@
             
             <!-- Logo Imgur (Hanya Logo Bersih dengan Efek Drop Shadow Putih) -->
             <div class="mb-6 flex justify-center">
-                <img src="https://i.imgur.com/7RAzred.png" referrerpolicy="no-referrer" alt="SPECTRA EXAM Logo" class="w-24 h-24 object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]" onerror="this.style.display='none';">
+                <img src="https://i.imgur.com/7RAzred.png" referrerpolicy="no-referrer" alt="SPECTRA EXAM Logo" class="w-24 h-24 object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]" onerror="this.onerror=null; this.style.display='none';">
             </div>
             
             <h1 class="text-3xl font-black mb-1 text-white tracking-widest uppercase">SPECTRA EXAM</h1>
@@ -2431,6 +2431,35 @@
             const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
             const secs = String(seconds % 60).padStart(2, '0');
             return `${hrs}:${mins}:${secs}`;
+        }
+
+        // FUNGSI UTAMA: FULL SCREEN TOGGLE (MEMPERBAIKI REFERENCE ERROR)
+        function toggleFullScreen() {
+            try {
+                if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+                    let promise;
+                    if (document.documentElement.requestFullscreen) {
+                        promise = document.documentElement.requestFullscreen();
+                    } else if (document.documentElement.webkitRequestFullscreen) {
+                        promise = document.documentElement.webkitRequestFullscreen();
+                    } else if (document.documentElement.mozRequestFullScreen) {
+                        promise = document.documentElement.mozRequestFullScreen();
+                    } else if (document.documentElement.msRequestFullscreen) {
+                        promise = document.documentElement.msRequestFullscreen();
+                    }
+                    
+                    if (promise && promise.catch) {
+                        promise.catch(err => {
+                            console.warn("Fullscreen diblokir oleh browser (izin iframe):", err);
+                            showCustomAlert("Informasi", "Fitur Layar Penuh diblokir pada tampilan preview saat ini.", "info");
+                        });
+                    }
+                } else {
+                    exitFullScreenSafe();
+                }
+            } catch (err) {
+                console.warn("Fullscreen toggle logic error:", err);
+            }
         }
 
         function renderTeacherDashboard() {
